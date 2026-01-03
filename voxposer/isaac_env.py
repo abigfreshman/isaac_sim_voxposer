@@ -38,6 +38,9 @@ class VoxposerIsaccEnv:
         self.workspace_min = np.array([0., -1, 0.])
         self.workspace_max = np.array([1, 1, 1.5])
 
+        self.workspace_min = np.array([-10., -10, -10.])
+        self.workspace_max = np.array([10, 10, 10.])
+
         self.cameras_name = ["front", 'left_shoulder', "rigth_shoulder", "overhead", "wrist"]
        
        # cameras position with resoluion (640, 480)
@@ -123,6 +126,8 @@ class VoxposerIsaccEnv:
             
             # find the index of the input "name" object
             idToLabels = mask["info"]["idToSemantics"]
+            # print(idToLabels)
+            # input()
             for idx, label in idToLabels.items():
                 for k, v in label.items():
                     if v == name:
@@ -170,9 +175,11 @@ class VoxposerIsaccEnv:
             cam_normals[flip_indices] *= -1
             normal.append(cam_normals)
             points.append(cam_obj_points)
-
-        points = np.concatenate(points, axis=0)
-        normals = np.concatenate(normal, axis=0)
+        if len(points):
+            points = np.concatenate(points, axis=0)
+            normals = np.concatenate(normal, axis=0)
+        else:
+            raise ValueError(f"Cannot find the object named {name} in the scene.")
 
         # 点云采样
         pcd = o3d.geometry.PointCloud()

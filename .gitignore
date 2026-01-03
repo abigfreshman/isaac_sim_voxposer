@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Logs
+*.log
+
+# Isaac / Omniverse
+*.usd
+*.cache
+.cache/
+
+# ROS
+build/
+install/
+log/
+
+# OS
+.DS_Store

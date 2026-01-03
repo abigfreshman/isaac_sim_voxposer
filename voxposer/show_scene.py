@@ -26,53 +26,10 @@ def main(args):
 
     logger.info("Starting initialization task")
     my_task = PutRubbishInBin(world, name=args.task_name)
-    world.add_task(my_task)
-
-    logger.info("Task initialization completed")
-
-    config = get_config(args.config)
-    logger.info("Configuration file loaded successfully")
-
-    if not args.visualize:
-        visualizer = None
-    else:
-        visualizer = ValueMapVisualizer(config["visualizer"])
-
-    logger.info("Starting environment initialization")
-
-    world.reset()
-
-    action = Move()
-    action.init_franka_pose(world)
-    action.init_articulation()
-    env = VoxposerIsaccEnv(my_task, action, world, simulation_app, visualizer=visualizer)
-    robot_name = my_task.franka_robot.name
-
-    logger.info("Environment initialization completed successfully")
-
-    logger.info("Adding sub-task LMPs")
-    lmps, lmp_env = setup_LMP(env, config, world, debug=False)
-    logger.info("LMPs added successfully")
-    voxposer_ui = lmps['plan_ui']
-
-    scene_obj = ["bin", "rubbish", "tomato1", "tomato2"]
-
-    env.task_scene_objects = scene_obj
-    env.robot_name = robot_name
-    env.grasped_obj_name = ["rubbish"]
-    set_lmp_objects(lmps, scene_obj)
-
-    logger.info("Scene objects setup completed")
-    logger.info("Starting LMP action execution...")
-    env.reset()
-    while True:
-        simulation_app.update()
-    voxposer_ui(args.description)
 
     while True:
         simulation_app.update()
 
-    # simulation_app.close()
 
 
 if __name__ == "__main__":

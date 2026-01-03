@@ -11,7 +11,8 @@ def get_config(env=None, config_path=None):
     assert env is None or config_path is None, 'env and config_path cannot be both specified'
     if config_path is None:
         assert env.lower() == 'isaac-sim'
-        config_path = '/home/ps/isaacsim42/Voxposer_isaac/voxposer/isaac_config.yaml'
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(current_dir, 'isaac_config.yaml')
     assert config_path and os.path.exists(config_path), f'config file does not exist ({config_path})'
     config = load_config(config_path)
     # wrap dict such that we can access config through attribute
