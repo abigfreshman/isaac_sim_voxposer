@@ -144,7 +144,7 @@ class PutRubbishInBin(BaseTask):
         #  add the scene usd file like rubbish and bin
         bin_usd_path = "/home/ps/isaacsim42/isaac_sim_voxposer/scene_obj_usd/bin_no_reference.usd"
         bin_prim_path = "/World/Steel_bin"
-        room_usd_path = "/home/ps/isaacsim42/isaac_sim_voxposer/scene_obj_usd/sample_room_move.usd"
+        room_usd_path = "/home/ps/isaacsim42/isaac_sim_voxposer/scene_obj_usd/sample_room_origin.usd"
         room_prim_path = "/World/Room"
         # rubbish_usd_path = "/home/ps/Desktop/usd_change/rubbish.usd"
         # rubbish_prim_path = "/World"
@@ -171,7 +171,8 @@ class PutRubbishInBin(BaseTask):
         self.franka_robot = world.scene.add(Franka(
             name='franka',
             prim_path='/World/franka',
-            position=[-0.5, 0, 3.9],
+            position=[0, 0, 0],
+            # position=[-0.5, 0, 3.9],
             orientation=[1.,0.,0.,0.]
         ))
 
@@ -269,10 +270,10 @@ class PutRubbishInBin(BaseTask):
         self.cameras_root.set_world_pose(position=[0,0,5])
         
         print('相机创建完成')
-        # vp_utils.get_active_viewport().set_active_camera("/World/cameras/front")
+        vp_utils.get_active_viewport().set_active_camera("/World/cameras/front")
         # from omni.isaac.core.utils.prims import delete_prim
 
-        delete_prim("/World/Room/turtlebot_tutorial/ActionGraph_drive")
+        # delete_prim("/World/Room/turtlebot_tutorial/ActionGraph_drive")
 
 
     def get_cam(self):
