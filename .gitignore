@@ -8,7 +8,7 @@ __pycache__/
 *.log
 
 # Isaac / Omniverse
-*.usd
+# *.usd
 *.cache
 .cache/
 
@@ -19,3 +19,4 @@ log/
 
 # OS
 .DS_Store
+.thumbs
