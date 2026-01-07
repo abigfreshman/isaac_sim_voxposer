@@ -15,8 +15,8 @@ from move import Move
 from omni.isaac.core import World
 
 
-openai.api_key = "sk-l2TuLVvHjIrRe9XZh7J79jnncxZQVpDPtpXVYXfCwbUEaESj"
-openai.api_base= "https://api.chatanywhere.tech/v1"
+openai.api_key = ""
+openai.api_base= ""
 
 print("接口正常，开始执行")
 world = World()
