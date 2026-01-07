@@ -13,6 +13,7 @@ from fakerealsense import FakeRealSense
 from omni.isaac.core.objects import DynamicCuboid
 import logging
 import omni.kit.viewport.utility as vp_utils
+import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -90,7 +91,7 @@ class PutRubbishInBin(BaseTask):
         
         self.bin_initial_position = self.bin_initial_position + self.offset
 
-        self.work_space= [1, 2, 1.5]
+        # self.work_space= [1, 2, 1.5]
 
         self.object_positon = {"bin":self.bin_initial_position, 
                                "rubbish":self.rubbish_initial_position,
@@ -144,7 +145,8 @@ class PutRubbishInBin(BaseTask):
         #  add the scene usd file like rubbish and bin
         bin_usd_path = "/home/ps/isaacsim42/isaac_sim_voxposer/scene_obj_usd/bin_no_reference.usd"
         bin_prim_path = "/World/Steel_bin"
-        room_usd_path = "/home/ps/isaacsim42/isaac_sim_voxposer/scene_obj_usd/sample_room_origin.usd"
+        room_usd_path = "/home/ps/isaacsim42/isaac_sim_voxposer/scene_obj_usd/room_on_robot.usd"
+        # room_usd_path = ""
         room_prim_path = "/World/Room"
         # rubbish_usd_path = "/home/ps/Desktop/usd_change/rubbish.usd"
         # rubbish_prim_path = "/World"
@@ -160,19 +162,19 @@ class PutRubbishInBin(BaseTask):
         world.scene.add(XFormPrim(prim_path="/World/Room", name="sample_room"))
 
         self.bin = XFormPrim("/World/Steel_bin")
-        self.bin.set_world_pose(position=[-0.6, 0, 3.83])
+        # self.bin.set_world_pose(position=[-0.6, 0, 5])
         # self.rubbish = XFormPrim("/World/Paper_Ball")
         self.room = XFormPrim("/World/Room")
         self.room.set_world_pose(position=[0,0,-0.6])
         self.cube = XFormPrim("/World/cube")
-        self.cube.set_world_pose(position=[-0.6,0,4.5])
+        self.cube.set_world_pose(position=[-0.6,0.1,4.5])
 
         # add franka robot
         self.franka_robot = world.scene.add(Franka(
             name='franka',
             prim_path='/World/franka',
-            position=[0, 0, 0],
-            # position=[-0.5, 0, 3.9],
+            # position=[0, 0, 0],
+            position=[-0.5, 0, 3.9],
             orientation=[1.,0.,0.,0.]
         ))
 
@@ -270,10 +272,11 @@ class PutRubbishInBin(BaseTask):
         self.cameras_root.set_world_pose(position=[0,0,5])
         
         print('相机创建完成')
-        vp_utils.get_active_viewport().set_active_camera("/World/cameras/front")
-        # from omni.isaac.core.utils.prims import delete_prim
+        # for cam in self.cameras.values():
+        world.scene.add(self.front_cam.camera)
 
-        # delete_prim("/World/Room/turtlebot_tutorial/ActionGraph_drive")
+        # time.sleep(1.0)
+        vp_utils.get_active_viewport().set_active_camera("/World/cameras/front/camera_axis/camera_direction/camera")
 
 
     def get_cam(self):
@@ -292,6 +295,8 @@ class PutRubbishInBin(BaseTask):
         rubbish_position, rubbish_orientation = self.rubbish.get_world_pose()
         obstruction_pos_0, obstruction_ori_0= self.first_obstruction.get_world_pose()
         obstruction_pos_1, obstruction_ori_1= self.second_obstruction.get_world_pose()
+        Franka_pose, _ = self.franka_robot.get_world_pose()
+        print(f"franka 的空间位置：{Franka_pose}")
         # TODO: change values with USD
         return {
             "bin": {

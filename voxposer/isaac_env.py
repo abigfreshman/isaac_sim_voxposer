@@ -31,24 +31,27 @@ class VoxposerIsaccEnv:
 
         self.init_length = np.array([0.04, 0.04])
 
-        self.work_space = np.array([1, 2, 1.5])  # 定义工作空间大小：m
-        self.workspace_bounds_min = np.array([0., -1, 0.])
-        self.workspace_bounds_max = np.array([1, 1, 1.5])
+        self.work_space = np.array([1, 1.5, 1.5])  # 定义工作空间大小：m
+        # self.workspace_bounds_min = np.array([0., -1, 0.])
+        # self.workspace_bounds_max = np.array([1, 1, 1.5])
 
-        self.workspace_min = np.array([0., -1, 0.])
-        self.workspace_max = np.array([1, 1, 1.5])
+        # self.workspace_min = np.array([0., -1, 0.])
+        # self.workspace_max = np.array([1, 1, 1.5])
 
-        self.workspace_min = np.array([-10., -10, -10.])
-        self.workspace_max = np.array([10, 10, 10.])
+        self.workspace_min = np.array([-0.5, -1., 3.5])
+        self.workspace_max = np.array([0.5, 0.5, 5])
+
+        self.workspace_bounds_min = self.workspace_min
+        self.workspace_bounds_max = self.workspace_max
 
         self.cameras_name = ["front", 'left_shoulder', "rigth_shoulder", "overhead", "wrist"]
        
        # cameras position with resoluion (640, 480)
-        self.cameras_position = [[3.0, -0.0, 2.0],
-                            [0.3, 1.5, 1.8],
-                            [0.3, -1.5, 1.8],
-                            [0.3, -0.0, 3.0],
-                            [0., 0., 0.05]]
+        # self.cameras_position = [[3.0, -0.0, 2.0],
+        #                     [0.3, 1.5, 1.8],
+        #                     [0.3, -1.5, 1.8],
+        #                     [0.3, -0.0, 3.0],
+        #                     [0., 0., 0.05]]
         # resolution (1024, 798)
         # self.cameras_position = [[1.5, -0.0, 1.5],
         #                     [0.3, 0.8, 1.5],
@@ -179,6 +182,8 @@ class VoxposerIsaccEnv:
             points = np.concatenate(points, axis=0)
             normals = np.concatenate(normal, axis=0)
         else:
+            while True:
+                self.simulation_app.update()
             raise ValueError(f"Cannot find the object named {name} in the scene.")
 
         # 点云采样

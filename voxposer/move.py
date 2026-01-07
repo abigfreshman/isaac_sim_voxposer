@@ -133,7 +133,7 @@ class Move:
             joint_position_cmd = action.get_dict()["joint_positions"]
         else:
             print("转换失败, 跳过该节点")
-            return
+            return None, None
         # print(f"转化后的dofs位移:{joint_position_cmd}")
         # 获取机械臂控制接口
         dc = _dynamic_control.acquire_dynamic_control_interface()

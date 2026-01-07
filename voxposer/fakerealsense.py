@@ -31,6 +31,7 @@ class FakeRealSense:
             focal_length (float, optional): camera focal length in mm. Defaults to 1.93.
             clip_range (tuple, optional): clipping range in m. Defaults to (0.01, 10.).
         """
+        self.name = name
         self.resolution = resolution
 
         create_prim(f"{base_link}/camera_axis")

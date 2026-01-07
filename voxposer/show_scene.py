@@ -15,6 +15,7 @@ from move import Move
 from omni.isaac.core import World
 from isaac_sim_voxposer.utils import setup_logger
 import argparse
+import time
 
 
 openai.api_key = "sk-l2TuLVvHjIrRe9XZh7J79jnncxZQVpDPtpXVYXfCwbUEaESj"
@@ -29,6 +30,7 @@ def main(args):
 
     while True:
         simulation_app.update()
+        time.sleep(0.01)
 
 
 

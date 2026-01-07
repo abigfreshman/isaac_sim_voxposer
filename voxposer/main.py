@@ -65,8 +65,10 @@ def main(args):
     logger.info("Scene objects setup completed")
     logger.info("Starting LMP action execution...")
     env.reset()
-    while True:
-        simulation_app.update()
+    # while True:
+    #     simulation_app.update()
+    # input()
+    # print("enter to continue ....")
     voxposer_ui(args.description)
 
     while True:

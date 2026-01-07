@@ -379,6 +379,7 @@ class LMP_interface():
     def get_ee_voxel_pos(self, pos_world=None):
         if pos_world is None:
             pos_world = self._env.get_ee_pos()
+        # print(pos_world)
         
         return self._world_to_voxel(pos_world)
     
