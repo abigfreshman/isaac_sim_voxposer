@@ -1,34 +1,28 @@
 import openai
 
-from voxposer.arguments import get_config
-from env.isaac_env import VoxposerIsaccEnv
-from voxposer.interfaces import setup_LMP
+from arguments import get_config
+from isaac_env import VoxposerIsaccEnv
+from interfaces import setup_LMP
 from utils import set_lmp_objects
 from visualizers import ValueMapVisualizer
 
 from omni.isaac.kit import SimulationApp
 simulation_app = SimulationApp({"headless": False}) 
 
-from env.task import PutRubbishInBin
+from task import PutRubbishInBin
 from move import Move
 
 from omni.isaac.core import World
-from utils import setup_logger
+from isaac_sim_voxposer.utils import setup_logger
 import argparse
-import omni.timeline
-import time
 
 
-openai.api_key = "sk-l2TuLVvHjIrRe9XZh7J79jnncxZQVpDPtpXVYXfCwbUEaESj"
-openai.api_base= "https://api.chatanywhere.tech/v1"
+openai.api_key = ""
+openai.api_base= ""
 
 
 def main(args):
-    timeline = omni.timeline.get_timeline_interface()
-
-    timeline.play()
     world = World()
-    
 
     logger.info("Starting initialization task")
     my_task = PutRubbishInBin(world, name=args.task_name)
@@ -71,17 +65,16 @@ def main(args):
     logger.info("Scene objects setup completed")
     logger.info("Starting LMP action execution...")
     env.reset()
-
-    voxposer_ui(args.description)
-
     # while True:
     #     simulation_app.update()
-    for _ in range(30):
-        simulation_app.update()
-        time.sleep(0.02)
+    # input()
+    # print("enter to continue ....")
+    voxposer_ui(args.description)
 
-    timeline.stop()
-    simulation_app.close()
+    while True:
+        simulation_app.update()
+
+    # simulation_app.close()
 
 
 if __name__ == "__main__":

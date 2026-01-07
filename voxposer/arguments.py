@@ -43,7 +43,6 @@ def get_config(env=None, config_path=None):
 
 
 if __name__ =="__main__":
-# def main():
     config = get_config(env="isaac-sim")
     print(config)
 

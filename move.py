@@ -6,6 +6,10 @@ from omni.isaac.core.utils.extensions import get_extension_path_from_name
 from omni.isaac.dynamic_control import _dynamic_control
 from omni.isaac.core.utils.types import ArticulationAction
 from omni.isaac.core.utils.rotations import rot_matrix_to_quat
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Move:
@@ -15,9 +19,8 @@ class Move:
     def __init__(self) -> None:
 
         self.joint_position_cmd_list = []
-        # gripper 状态：打开
         self.gripper_position_cmd = [0.04, 0.04]
-        # franka 最初位姿
+        # franka 最初位姿，home姿态
         self.joint_position_cmd = [0.04409, -0.17844, -0.03579,  -1.46597, -0.00767, 1.27802,  0.78540]
         
     def init_franka_pose(self, world):
@@ -29,9 +32,6 @@ class Move:
         # num_joints = dc.get_articulation_joint_count(art)
         # num_dofs = dc.get_articulation_dof_count(art)
         # num_bodies = dc.get_articulation_body_count(art)
-        # print(f"num_joints:{num_joints}")
-        # print(f"num_dofs:{num_dofs}")
-        # print(f"num_bodies:{num_bodies}")
 
         # init gripper pose
         gripper_dof_ptrs = [dc.find_articulation_dof(
@@ -56,7 +56,7 @@ class Move:
         for idx, dof_ptr in enumerate(dof_ptrs):
             dc.set_dof_position_target(
                 dof_ptr, self.joint_position_cmd[idx])
-             
+ 
     def init_articulation(self):
         """
             init the articulation kinematics solver
@@ -92,7 +92,6 @@ class Move:
         Args:
             pose: world pose of the end effector, 
         """
-        print(pose)
         target_position = pose[:3]
         target_quat = pose[3:7]
         length = pose[-1]
@@ -100,13 +99,12 @@ class Move:
         action, success = self.articulation_kinematics_solver.compute_inverse_kinematics(
                 target_position, target_quat) ########
         
-        # print(f"{action}, 成功标志:{success}")
-        print(f"转化成功标志:{success}")
-    
+        logger.info(f"转化成功标志: {success}")
+
         if success:
             joint_position_cmd = action.get_dict()["joint_positions"]
         else:
-            print("转换失败, 跳过该节点")
+            logger.info("转换失败, 跳过该节点")
             return
         # 指定抓手的位移，最大为【0.04， 0.04】表示gripper完全打开
         if pose[-2] == 1:
@@ -114,14 +112,12 @@ class Move:
         elif pose[-2] == 0:
             joint_position_cmd.extend([length/2, length/2])
         else:
-            print(f"抓手状态错误,必须为0或1,得到{pose[-2]}")
+            logger.info(f"夹爪状态错误,必须为0或1,得到{pose[-2]}")
 
         action = ArticulationAction(joint_positions=np.array(joint_position_cmd))
-        # print(action)
         self.articulation.apply_action(action)
 
     def move_to_by_dc(self, pose):
-        # print(f"输入位置：{pose[:3]}: 输入旋转：{pose[3:7]}")
         target_position = pose[:3]
         target_quat = pose[3:7]
         length = pose[-1]
@@ -132,9 +128,8 @@ class Move:
         if success:
             joint_position_cmd = action.get_dict()["joint_positions"]
         else:
-            print("转换失败, 跳过该节点")
+            logger.info("转换失败, 跳过该节点")
             return None, None
-        # print(f"转化后的dofs位移:{joint_position_cmd}")
         # 获取机械臂控制接口
         dc = _dynamic_control.acquire_dynamic_control_interface()
         art = dc.get_articulation("/World/franka/panda_link0")
@@ -147,16 +142,13 @@ class Move:
         for idx, dof_ptr in enumerate(dof_ptrs):
             dc.set_dof_position_target(
                 dof_ptr, joint_position_cmd[idx])
-        # print(f"关节姿态：{joint_position_cmd}")
         # gripper action
         if pose[-2] == 1:
             gripper_position_cmd = np.array([0.04, 0.04])
-            # print("打开抓手")
         elif pose[-2] == 0:
             gripper_position_cmd = np.array([length/2, length/2])
-            # print("闭合抓手")
         else:
-            print(f"抓手状态错误,必须为0或1,得到{pose[-2]}")
+            logger.info(f"抓手状态错误,必须为0或1,得到{pose[-2]}")
         dc = _dynamic_control.acquire_dynamic_control_interface()
         art = dc.get_articulation("/World/franka/panda_link0")
 
@@ -172,8 +164,6 @@ class Move:
         pose_from_joints_action = self.articulation_kinematics_solver.compute_end_effector_pose()
         position, orientition = pose_from_joints_action[0], pose_from_joints_action[1]
         quat = rot_matrix_to_quat(orientition)
-        # print(f"输出位置：{position}, 输出旋转：{quat}")
-        # input()
         return (position, quat)
 
     def compute_end_effector_pose_dy_articulation_pose(self):

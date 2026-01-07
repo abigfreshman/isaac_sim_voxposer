@@ -16,6 +16,10 @@ import omni.kit.viewport.utility as vp_utils
 import time
 import os
 
+import omni.replicator.core as rep
+import omni.timeline
+
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -160,7 +164,6 @@ class PutRubbishInBin(BaseTask):
         world.scene.add(XFormPrim(prim_path="/World/Room", name="sample_room"))
 
         self.bin = XFormPrim("/World/Steel_bin")
-        # self.bin.set_world_pose(position=[-0.6, 0, 5])
         # self.rubbish = XFormPrim("/World/Paper_Ball")
         self.room = XFormPrim("/World/Room")
         self.room.set_world_pose(position=[0,0,-0.6])
@@ -189,7 +192,7 @@ class PutRubbishInBin(BaseTask):
         self._task_objects[self.first_obstruction.name] = self.first_obstruction
         self._task_objects[self.second_obstruction.name] = self.second_obstruction
         self._task_objects[self.franka_robot.name] = self.franka_robot
-        
+
         # 创建相机
         self.cameras = {}
         self.camera_names = ["front", 'left_shoulder', "rigth_shoulder", "overhead", "wrist"]
@@ -272,7 +275,8 @@ class PutRubbishInBin(BaseTask):
 
         # 设置默认相机视角
         world.scene.add(self.front_cam.camera)
-        vp_utils.get_active_viewport().set_active_camera("/World/cameras/front/camera_axis/camera_direction/camera")
+        vp_utils.get_active_viewport().set_active_camera(self.front_cam.camera.prim_path)
+        self.take_video(self.front_cam)
 
 
     def get_cam(self):
@@ -322,3 +326,21 @@ class PutRubbishInBin(BaseTask):
 
             }
         }
+
+    def take_video(self,camera: FakeRealSense):
+        with rep.new_layer():
+            render_product = rep.create.render_product(
+                camera.camera.prim_path,
+                resolution=(1280, 720)
+            )
+
+            writer = rep.WriterRegistry.get("BasicWriter")
+            writer.initialize(
+                output_dir="/home/ps/isaacsim42/isaac_sim_voxposer/visualizations",
+                rgb=True,
+                video=True,          # ⭐ 关键
+                video_fps=30,
+                video_quality=8
+            )
+
+            writer.attach([render_product])
