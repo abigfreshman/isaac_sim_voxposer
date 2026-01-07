@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug VoxPoser (Isaac Sim is42py)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/isaac_sim_voxposer/voxposer/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "/home/ps/isaacsim42/python.sh",
+            "justMyCode": false,
+            "env": {
+                "PYTHONUNBUFFERED": "1"
+            }
+        }
+    ]
+}

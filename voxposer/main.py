@@ -13,60 +13,79 @@ from task import PutRubbishInBin
 from move import Move
 
 from omni.isaac.core import World
+from isaac_sim_voxposer.utils import setup_logger
+import argparse
 
 
-openai.api_key = "sk-l2TuLVvHjIrRe9XZh7J79jnncxZQVpDPtpXVYXfCwbUEaESj"
-openai.api_base= "https://api.chatanywhere.tech/v1"
+openai.api_key = ""
+openai.api_base= ""
 
-print("接口正常，开始执行")
-world = World()
 
-print("#"*100)
-print("开始初始化任务")
-my_task = PutRubbishInBin(world, name="put_rubbish_in_bin")
-world.add_task(my_task)
+def main(args):
+    world = World()
 
-print("任务初始化完成")
-print("#"*100)
+    logger.info("Starting initialization task")
+    my_task = PutRubbishInBin(world, name=args.task_name)
+    world.add_task(my_task)
 
-config = get_config('isaac-sim')
-print("配置文件加载成功")
-print("#"*100)
-# visualizer = ValueMapVisualizer(config["visualizer"])   # 可视化显示规划的路径，开启时额外增加运动时长, 默认为None，即关闭
-visualizer = None           # 需要显示路径时反注释上一行
-print("开始初始化环境")
+    logger.info("Task initialization completed")
 
-world.reset()
+    config = get_config(args.config)
+    logger.info("Configuration file loaded successfully")
 
-action = Move()
-action.init_franka_pose(world)
-action.init_articulation()
-env = VoxposerIsaccEnv(my_task, action, world, simulation_app, visualizer=visualizer)
-robot_name = my_task.franka_robot.name
+    if not args.visualize:
+        visualizer = None
+    else:
+        visualizer = ValueMapVisualizer(config["visualizer"])
 
-print("环境初始化成功")
-print("#"*100)
+    logger.info("Starting environment initialization")
 
-print("添加各子任务LMP")
-lmps, lmp_env = setup_LMP(env, config, world, debug=False)
-print("LMP添加完成")
-voxposer_ui = lmps['plan_ui']
+    world.reset()
 
-description = "put the rubbish into the bin"
-scene_obj = ["bin", "rubbish", "tomato1", "tomato2"]
+    action = Move()
+    action.init_franka_pose(world)
+    action.init_articulation()
+    env = VoxposerIsaccEnv(my_task, action, world, simulation_app, visualizer=visualizer)
+    robot_name = my_task.franka_robot.name
 
-env.task_scene_objects = scene_obj
-env.robot_name = robot_name
-env.grasped_obj_name = ["rubbish"]
-set_lmp_objects(lmps, scene_obj)
+    logger.info("Environment initialization completed successfully")
 
-print("完成场景物品设置")
-print("#"*100)
-print("开始调用LMP执行动作")
-env.reset()
-voxposer_ui(description)
+    logger.info("Adding sub-task LMPs")
+    lmps, lmp_env = setup_LMP(env, config, world, debug=False)
+    logger.info("LMPs added successfully")
+    voxposer_ui = lmps['plan_ui']
 
-while True:
-    simulation_app.update()
+    scene_obj = ["bin", "rubbish", "tomato1", "tomato2"]
 
-simulation_app.close()
+    env.task_scene_objects = scene_obj
+    env.robot_name = robot_name
+    env.grasped_obj_name = ["rubbish"]
+    set_lmp_objects(lmps, scene_obj)
+
+    logger.info("Scene objects setup completed")
+    logger.info("Starting LMP action execution...")
+    env.reset()
+    # while True:
+    #     simulation_app.update()
+    # input()
+    # print("enter to continue ....")
+    voxposer_ui(args.description)
+
+    while True:
+        simulation_app.update()
+
+    # simulation_app.close()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--config", type=str, default="isaac-sim", help="Path to the config file")
+    parser.add_argument("--visualize", action="store_true", help="Wether to visualize and save the planned path.")
+    parser.add_argument("--task-name", default="put_rubbish_in_bin", help="Name of the task")
+    parser.add_argument("--description", default="put the rubbish into the bin", help="Description of the task")
+
+    args = parser.parse_args()
+    
+    logger = setup_logger("main")
+    main(args)

@@ -1,11 +1,11 @@
-from LMP import LMP
-from utils import get_clock_time, normalize_vector, pointat2quat, bcolors, Observation, VoxelIndexingWrapper
+from isaac_sim_voxposer.voxposer.LMP import LMP
+from isaac_sim_voxposer.utils import get_clock_time, normalize_vector, pointat2quat, bcolors, Observation, VoxelIndexingWrapper
 import numpy as np
-from planners import PathPlanner
+from isaac_sim_voxposer.voxposer.planners import PathPlanner
 import time
 from scipy.ndimage import distance_transform_edt
 import transforms3d
-from controllers import Controller
+from isaac_sim_voxposer.voxposer.controllers import Controller
 
 
 EE_ALIAS = ['ee', 'endeffector', 'end_effector', 'end effector', 'gripper', 'hand']
@@ -379,6 +379,7 @@ class LMP_interface():
     def get_ee_voxel_pos(self, pos_world=None):
         if pos_world is None:
             pos_world = self._env.get_ee_pos()
+        # print(pos_world)
         
         return self._world_to_voxel(pos_world)
     

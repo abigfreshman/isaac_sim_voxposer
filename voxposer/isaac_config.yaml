@@ -26,7 +26,7 @@ visualizer:
 
 lmp_config:
   env:
-    map_size: 100
+    map_size: 200
     num_waypoints_per_plan: 10000  # set to a large number since we only do open loop for sim
     max_plan_iter: 1
     visualize: True
