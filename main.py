@@ -1,19 +1,19 @@
 import openai
 
-from arguments import get_config
-from isaac_env import VoxposerIsaccEnv
-from interfaces import setup_LMP
+from voxposer.arguments import get_config
+from env.isaac_env import VoxposerIsaccEnv
+from voxposer.interfaces import setup_LMP
 from utils import set_lmp_objects
 from visualizers import ValueMapVisualizer
 
 from omni.isaac.kit import SimulationApp
 simulation_app = SimulationApp({"headless": False}) 
 
-from task import PutRubbishInBin
+from env.task import PutRubbishInBin
 from move import Move
 
 from omni.isaac.core import World
-from isaac_sim_voxposer.utils import setup_logger
+from utils import setup_logger
 import argparse
 
 
@@ -65,10 +65,7 @@ def main(args):
     logger.info("Scene objects setup completed")
     logger.info("Starting LMP action execution...")
     env.reset()
-    # while True:
-    #     simulation_app.update()
-    # input()
-    # print("enter to continue ....")
+
     voxposer_ui(args.description)
 
     while True:

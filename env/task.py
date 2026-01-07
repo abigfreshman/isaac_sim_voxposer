@@ -9,11 +9,12 @@ from omni.isaac.core.prims.xform_prim import XFormPrim
 from omni.isaac.core.utils.stage import add_reference_to_stage, get_stage_units
 
 from omni.isaac.franka import Franka
-from fakerealsense import FakeRealSense
+from isaac_sim_voxposer.camera import FakeRealSense
 from omni.isaac.core.objects import DynamicCuboid
 import logging
 import omni.kit.viewport.utility as vp_utils
 import time
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class PutRubbishInBin(BaseTask):
     """
-    create task scene and scene objects
+    create task scene and add scene objects
     Args:
         name: str: the short name of task 
     """
@@ -91,7 +92,6 @@ class PutRubbishInBin(BaseTask):
         
         self.bin_initial_position = self.bin_initial_position + self.offset
 
-        # self.work_space= [1, 2, 1.5]
 
         self.object_positon = {"bin":self.bin_initial_position, 
                                "rubbish":self.rubbish_initial_position,
@@ -105,12 +105,10 @@ class PutRubbishInBin(BaseTask):
                             }
         
         world.scene.add_default_ground_plane()
+        # 添加box类型的墙壁
         # add_reference_to_stage(usd_path="omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Environments/Grid/gridroom_curved.usd", prim_path="/GridRoom")
  
         create_prim("/World/cube")
-        # create_prim("/World/cube/rubbish_cube")
-        # create_prim("/World/cube/tomato1")
-        # create_prim("/World/cube/tomato2")
 
         self.rubbish = world.scene.add(DynamicCuboid(
             name='rubbish',
@@ -143,10 +141,10 @@ class PutRubbishInBin(BaseTask):
         ))
 
         #  add the scene usd file like rubbish and bin
-        bin_usd_path = "/home/ps/isaacsim42/isaac_sim_voxposer/scene_obj_usd/bin_no_reference.usd"
+        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        bin_usd_path = os.path.join(current_dir, 'scene_elements', 'bin_no_reference.usd')
         bin_prim_path = "/World/Steel_bin"
-        room_usd_path = "/home/ps/isaacsim42/isaac_sim_voxposer/scene_obj_usd/room_on_robot.usd"
-        # room_usd_path = ""
+        room_usd_path = os.path.join(current_dir, 'scene_elements', 'room_no_robot.usd')
         room_prim_path = "/World/Room"
         # rubbish_usd_path = "/home/ps/Desktop/usd_change/rubbish.usd"
         # rubbish_prim_path = "/World"
@@ -191,12 +189,11 @@ class PutRubbishInBin(BaseTask):
         self._task_objects[self.first_obstruction.name] = self.first_obstruction
         self._task_objects[self.second_obstruction.name] = self.second_obstruction
         self._task_objects[self.franka_robot.name] = self.franka_robot
+        
         # 创建相机
         self.cameras = {}
- 
         self.camera_names = ["front", 'left_shoulder', "rigth_shoulder", "overhead", "wrist"]
-        print("#"*100)
-        print(f"{bcolors.OKBLUE}start to create cameras")
+        logger.info(f"{bcolors.OKBLUE}start to create cameras")
         # 创建相机之前先创建路径
         create_prim("/World/cameras")
         create_prim("/World/cameras/front")
@@ -271,11 +268,10 @@ class PutRubbishInBin(BaseTask):
         self.cameras_root = XFormPrim("/World/cameras")
         self.cameras_root.set_world_pose(position=[0,0,5])
         
-        print('相机创建完成')
-        # for cam in self.cameras.values():
-        world.scene.add(self.front_cam.camera)
+        logger.info('相机创建完成')
 
-        # time.sleep(1.0)
+        # 设置默认相机视角
+        world.scene.add(self.front_cam.camera)
         vp_utils.get_active_viewport().set_active_camera("/World/cameras/front/camera_axis/camera_direction/camera")
 
 
@@ -296,7 +292,6 @@ class PutRubbishInBin(BaseTask):
         obstruction_pos_0, obstruction_ori_0= self.first_obstruction.get_world_pose()
         obstruction_pos_1, obstruction_ori_1= self.second_obstruction.get_world_pose()
         Franka_pose, _ = self.franka_robot.get_world_pose()
-        print(f"franka 的空间位置：{Franka_pose}")
         # TODO: change values with USD
         return {
             "bin": {

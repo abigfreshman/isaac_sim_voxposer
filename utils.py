@@ -3,7 +3,9 @@ import numpy as np
 # import numpy as np
 import plotly.graph_objects as go
 import datetime
+import logging
 from transforms3d.quaternions import mat2quat
+
 
 def set_lmp_objects(lmps, objects):
     if isinstance(lmps, dict):
@@ -360,6 +362,26 @@ class VoxelIndexingWrapper:
     
     def __getattr__(self, name):
         return self.array.__getattribute__(name)
-    
 
 
+def setup_logger(name="robot_voice"):
+    current_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    log_dir = os.path.join("output", "log")
+    os.makedirs(log_dir, exist_ok=True)
+    log_file_path = os.path.join(log_dir, f"{current_datetime}.log")
+
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+
+    formatter = logging.Formatter("%(asctime)s-%(name)s-%(levelname)s-%(message)s")
+
+    if not logger.handlers:  # 避免重复添加
+        file_handler = logging.FileHandler(log_file_path)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
+    return logger

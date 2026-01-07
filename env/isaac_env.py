@@ -2,10 +2,14 @@ import numpy as np
 import json
 import open3d as o3d
 
-from utils import normalize_vector, bcolors
+from isaac_sim_voxposer.utils import normalize_vector, bcolors
 import cv2
 import ast
-import open3d as o3d  
+import open3d as o3d 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class VoxposerIsaccEnv:
@@ -31,38 +35,21 @@ class VoxposerIsaccEnv:
 
         self.init_length = np.array([0.04, 0.04])
 
-        self.work_space = np.array([1, 1.5, 1.5])  # 定义工作空间大小：m
-        # self.workspace_bounds_min = np.array([0., -1, 0.])
-        # self.workspace_bounds_max = np.array([1, 1, 1.5])
-
-        # self.workspace_min = np.array([0., -1, 0.])
-        # self.workspace_max = np.array([1, 1, 1.5])
-
         self.workspace_min = np.array([-0.5, -1., 3.5])
         self.workspace_max = np.array([0.5, 0.5, 5])
 
         self.workspace_bounds_min = self.workspace_min
         self.workspace_bounds_max = self.workspace_max
 
+        self.work_space = self.workspace_max - self.workspace_min  # 定义工作空间大小：m
+
         self.cameras_name = ["front", 'left_shoulder', "rigth_shoulder", "overhead", "wrist"]
        
-       # cameras position with resoluion (640, 480)
-        # self.cameras_position = [[3.0, -0.0, 2.0],
-        #                     [0.3, 1.5, 1.8],
-        #                     [0.3, -1.5, 1.8],
-        #                     [0.3, -0.0, 3.0],
-        #                     [0., 0., 0.05]]
-        # resolution (1024, 798)
-        # self.cameras_position = [[1.5, -0.0, 1.5],
-        #                     [0.3, 0.8, 1.5],
-        #                     [0.3, -0.8, 1.5],
-        #                     [0.3, -0.0, 1.5],
-        #                     [0., 0., 0.05]]
+
         self.cameras = self.task.get_cam()
         self.observation = self.task.get_observations()
 
-        print("#"*100)
-        print("相机正常加载")
+        logger.info("相机正常加载")
        
         self.cam_extrinsic = {}
         self.lookat = np.array([0,0,1])
@@ -73,7 +60,7 @@ class VoxposerIsaccEnv:
             lookat_vector = ext[:3, :3] @ self.lookat
             self.lookat_vector[name] = normalize_vector(lookat_vector)
 
-        print("相机参数读取正常")
+        logger.info("相机参数读取正常")
         
         self.task_scene_objects = ['bin', "rubbish", "tomato1", "tomato2"]
         self.robot_name = "franka"
@@ -108,29 +95,25 @@ class VoxposerIsaccEnv:
                 if img_depth is not None and np.isinf(img_depth).all() ==0  and img_rgb.any() !=0:
                     break
             world_points = np.array(cam.get_world_points()).reshape(-1, 3)
-           
-            # print("点云可视化")
-            # pcd = o3d.geometry.PointCloud()  
-            # pcd.points = o3d.utility.Vector3dVector(world_points) 
+
+            # 点云可视化
+            # pcd = o3d.geometry.PointCloud()
+            # pcd.points = o3d.utility.Vector3dVector(world_points)
             # o3d.visualization.draw_geometries([pcd])
-            # print("可视化完成")
             
             label_idx = None
             mask = cam.get_instance_segmentation()
-            img = mask["data"]        #数据类型为uint32 
-            # print(img.shape)
 
             # 查看 mask 图像
+            # img = mask["data"]        #数据类型为uint32 
             # img = img.astype(np.uint8)
             # cv2.imshow("my_img", img)
             # cv2.waitKey(0)  
             # cv2.destroyAllWindows()
-            # input()
+
             
             # find the index of the input "name" object
             idToLabels = mask["info"]["idToSemantics"]
-            # print(idToLabels)
-            # input()
             for idx, label in idToLabels.items():
                 for k, v in label.items():
                     if v == name:
@@ -147,25 +130,16 @@ class VoxposerIsaccEnv:
             b,g,r,a = int(label_idx[0]), int(label_idx[1]), int(label_idx[2]), int(label_idx[3])
             idx = (a << 24) | (r << 16) | (g << 8) | b         
 
-            # Search all unique pix value and counts of mask
-            # unqique_value, counts = np.unique(img, return_counts=True)
-            # for val, num in zip(unqique_value, counts):
-            #     if val ==idx:
-            #         print(f"count的像素点数量:<<{name}>>,{num}")
-
             # only get the interesting object mask 
             obj_mask = np.zeros_like(data, dtype=bool)
-            # print(f"{obj_mask.shape}")
             # the obj_mask shape must keep with points shape
             for x in range(height):
                 for y in range(width):
                     if data[x][y] == idx:
                         obj_mask[x][y] = True
-            # print(f"{obj_mask.shape}")
             obj_mask = obj_mask.flatten()
 
             clip_points = get_clip_points(world_points, self.workspace_min, self.workspace_max)# workstation 大小剪切点云
-            # print(f"最小点云：{np.min(clip_points, axis=0)}, 最大点云：{np.max(clip_points, axis=0)}")
             clip_mask = get_clip_points(world_points, self.workspace_min, self.workspace_max, obj_mask)
             cam_obj_points = np.array(clip_points[clip_mask]).reshape(-1, 3)
 
@@ -183,8 +157,8 @@ class VoxposerIsaccEnv:
             normals = np.concatenate(normal, axis=0)
         else:
             while True:
-                self.simulation_app.update()
-            raise ValueError(f"Cannot find the object named {name} in the scene.")
+                # self.simulation_app.update()
+                raise ValueError(f"Cannot find the object named {name} in the scene. run show_scene to check")
 
         # 点云采样
         pcd = o3d.geometry.PointCloud()
@@ -194,10 +168,10 @@ class VoxposerIsaccEnv:
         obj_points = np.asarray(pcd_downsampled.points)
         obj_normals = np.asarray(pcd_downsampled.normals)
 
-        print(f"对象点云，形状，{obj_points.shape}")
-        print(f"对象法向量，形状，{obj_normals.shape}")
-        print(f"对象<<{name}>>最终点云位置{np.mean(obj_points, axis=0)}")
-       
+        logger.info(f"检测到<{name}>点云shape: {obj_points.shape}")
+        logger.info(f"检测到<{name}>法向量shape: {obj_normals.shape}")
+        logger.info(f"检测到<{name}>最终位置: {np.mean(obj_points, axis=0)}")
+
         return obj_points, obj_normals
 
     def get_scene_3d_obs(self, ignore_robot=False, ignore_grasped_obj=False):
@@ -244,11 +218,9 @@ class VoxposerIsaccEnv:
                 b,g,r,a = int(robot_idx[0]), int(robot_idx[1]), int(robot_idx[2]), int(robot_idx[3])
                 idx = (a << 24) | (r << 16) | (g << 8) | b
                 obj_mask = np.zeros_like(masks, dtype=bool)
-                # print(f"{obj_mask.shape}")
                 for i in range(len(masks)):
                     if masks[i] == idx:
                         obj_mask[i] = True
-                # print(f"{obj_mask.shape}")
                 obj_mask = obj_mask.flatten()
 
                 points = points[~obj_mask]
@@ -265,12 +237,10 @@ class VoxposerIsaccEnv:
             if grasped_idx is not None:
                 b,g,r,a = int(grasped_idx[0]), int(grasped_idx[1]), int(grasped_idx[2]), int(grasped_idx[3])
                 idx = (a << 24) | (r << 16) | (g << 8) | b
-                obj_mask = np.zeros_like(masks, dtype=bool)
-                # print(f"{obj_mask.shape}")
+                obj_mask = np.zeros_like(masks, dtype=bool)           
                 for i in range(len(masks)):
                     if masks[i] == idx:
                         obj_mask[i] = True
-                # print(f"{obj_mask.shape}")
                 obj_mask = obj_mask.flatten()
 
                 points = points[~obj_mask]
@@ -471,23 +441,18 @@ def depth2pointscolud(img, extrinsic):
         world_frame = np.matmul(extrinsic, camera_transform)
 
         point.append(world_frame[0:3,3])
-        # point = np.array(point)
-
-    # point_clouds = np.concatenate(point_clouds, axis=0) 
 
     return point
+
 
 def get_clip_points(point, min, max, img=None):
     min = np.array(min)
     max = np.array(max)
     point = np.array(point).reshape(-1,3)
-    # print(f"min coord: {min}, max coord: {max}")   
-    # points_mask = np.zeros_like(trans_point_cloud)
     chosen_idx_x = (point[:, 0]>=min[0]) & (point[:, 0]<= max[0])
     chosen_idx_y = (point[:, 1]>=min[1]) & (point[:, 1]<= max[1])
     chosen_idx_z = (point[:, 2]>=min[2]) & (point[:, 2]<= max[2])
 
-    # points_mask[trans_point_cloud>=work_space_min_coord and trans_point_cloud <= work_space_max_coord] = 1
     points_cloud = point[(chosen_idx_x & chosen_idx_y & chosen_idx_z)]
 
     if img is not None:
@@ -497,48 +462,8 @@ def get_clip_points(point, min, max, img=None):
     return points_cloud
 
 def get_max_min_coord(position, size):
-    # old_pos = position
     new = position    # 换原点后新的底面中心店坐标
-
     min = [new[0]-size[0]/2, new[1]-size[1]/2, new[2]]
     max = [new[0]+size[0]/2, new[1]+size[1]/2, new[2]+size[2]]
-    return min, max
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return min, max

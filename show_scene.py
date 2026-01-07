@@ -1,19 +1,11 @@
 import openai
 
-from arguments import get_config
-from isaac_env import VoxposerIsaccEnv
-from interfaces import setup_LMP
-from utils import set_lmp_objects
-from visualizers import ValueMapVisualizer
-
 from omni.isaac.kit import SimulationApp
 simulation_app = SimulationApp({"headless": False}) 
 
-from task import PutRubbishInBin
-from move import Move
-
+from env.task import PutRubbishInBin
 from omni.isaac.core import World
-from isaac_sim_voxposer.utils import setup_logger
+from utils import setup_logger
 import argparse
 import time
 

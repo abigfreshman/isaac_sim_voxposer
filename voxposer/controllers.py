@@ -4,7 +4,7 @@ from utils import normalize_vector
 import copy
 import time
 import os
-from dynamics_models import PushingDynamicsModel
+from isaac_sim_voxposer.voxposer.dynamics_models import PushingDynamicsModel
 # from omni.isaac.core.controllers import BaseController
 # from omni.isaac.core.articulations import Articulation
 # from omni.isaac.motion_generation import ArticulationKinematicsSolver, LulaKinematicsSolver
